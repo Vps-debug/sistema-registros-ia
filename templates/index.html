@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Registros</title>
+</head>
+<body>
+    <h1>Sistema Inteligente de Consulta e Conferência</h1>
+
+    <form method="POST">
+        <label for="codigo">Código do registro:</label>
+        <input
+            type="text"
+            id="codigo"
+            name="codigo"
+            placeholder="Ex.: REG-001"
+            value="{{ codigo }}"
+            required
+        >
+        <button type="submit">Consultar</button>
+    </form>
+
+    {% if mensagem %}
+        <p>{{ mensagem }}</p>
+    {% endif %}
+
+    {% if comparacao %}
+        <h2>Resultado da conferência</h2>
+        <p><strong>Situação:</strong> {{ comparacao.situacao }}</p>
+
+        <h3>Cadastro principal</h3>
+        {% if resultado.principal %}
+            <ul>
+                {% for campo, valor in resultado.principal.items() %}
+                    <li><strong>{{ campo }}:</strong> {{ valor }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Registro ausente nesta fonte.</p>
+        {% endif %}
+
+        <h3>Sistema secundário</h3>
+        {% if resultado.secundario %}
+            <ul>
+                {% for campo, valor in resultado.secundario.items() %}
+                    <li><strong>{{ campo }}:</strong> {{ valor }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Registro ausente nesta fonte.</p>
+        {% endif %}
+
+        {% if comparacao.divergencias %}
+            <h3>Divergências encontradas</h3>
+            <ul>
+                {% for campo, valores in comparacao.divergencias.items() %}
+                    <li>
+                        <strong>{{ campo }}:</strong>
+                        Principal: {{ valores.principal }} |
+                        Secundário: {{ valores.secundario }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endif %}
+</body>
+</html>
