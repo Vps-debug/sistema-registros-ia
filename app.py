@@ -1,4 +1,4 @@
-
+from ia import analisar_divergencias
 from flask import Flask, render_template, request
 from banco import consultar_registro, comparar_registros
 
@@ -10,6 +10,7 @@ def inicio():
     codigo = ""
     resultado = None
     comparacao = None
+    analise_ia = None
     mensagem = None
 
     if request.method == "POST":
@@ -28,12 +29,15 @@ def inicio():
                     resultado["secundario"]
                 )
 
+                analise_ia = analisar_divergencias(comparacao)
+
     return render_template(
         "index.html",
         codigo=codigo,
         resultado=resultado,
         comparacao=comparacao,
-        mensagem=mensagem
+        mensagem=mensagem,
+        analise_ia=analise_ia
     )
 
 

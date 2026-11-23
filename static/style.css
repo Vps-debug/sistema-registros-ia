@@ -65,3 +65,15 @@ li {
 p {
     line-height: 1.6;
 }
+
+.analise-ia {
+    background: #eaf2ff;
+    border-left: 4px solid #2563eb;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 25px;
+}
+
+.analise-ia h2 {
+    margin-top: 0;
+}

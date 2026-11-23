@@ -35,9 +35,17 @@ def consultar_registro(codigo):
 
 def comparar_registros(principal, secundario):
     if principal is None or secundario is None:
+        if principal is None and secundario is None:
+            fonte_ausente = "Ambas as fontes"
+        elif principal is None:
+            fonte_ausente = "Cadastro principal"
+        else:
+            fonte_ausente = "Sistema secundário"
+
         return {
             "situacao": "Registro ausente em uma das fontes",
-            "divergencias": {}
+            "divergencias": {},
+            "fonte_ausente": fonte_ausente
         }
 
     divergencias = {}

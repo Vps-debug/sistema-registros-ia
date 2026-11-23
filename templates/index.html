@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta de Registros</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <h1>Sistema Inteligente de Consulta e Conferência</h1>
@@ -66,5 +65,14 @@
             </ul>
         {% endif %}
     {% endif %}
+
+    <!-- Análise gerada pelo Gemini -->
+    {% if analise_ia %}
+        <section class="analise-ia">
+            <h2>Análise da Inteligência Artificial</h2>
+            <p>{{ analise_ia }}</p>
+        </section>
+    {% endif %}
+
 </body>
 </html>
