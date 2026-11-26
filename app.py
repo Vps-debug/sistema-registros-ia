@@ -1,3 +1,5 @@
+import os
+from secrets import compare_digest
 import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, jsonify, abort
 from ia import analisar_divergencias, responder_assistente
@@ -41,6 +43,39 @@ criar_tabela_historico()
 criar_tabela_retificacoes()
 criar_tabela_edicoes()
 criar_tabela_exclusoes()
+
+# Proteção de acesso à demonstração online
+@app.before_request
+def proteger_acesso():
+    usuario = os.getenv("DEMO_USER", "auditreg")
+    senha = os.getenv("DEMO_PASSWORD")
+
+    if not senha:
+        if os.getenv("RENDER") == "true":
+            abort(503)
+        return
+
+    auth = request.authorization
+
+    if (
+        auth
+        and auth.type == "basic"
+        and compare_digest(
+            (auth.username or "").encode(),
+            usuario.encode()
+        )
+        and compare_digest(
+            (auth.password or "").encode(),
+            senha.encode()
+        )
+    ):
+        return
+
+    return (
+        "Acesso restrito à demonstração.",
+        401,
+        {"WWW-Authenticate": 'Basic realm="AuditReg"'}
+    )
 
 # Página inicial
 @app.route("/")
