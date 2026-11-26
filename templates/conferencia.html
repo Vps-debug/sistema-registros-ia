@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}Conferência | AuditReg{% endblock %}
+{% block breadcrumb %}Conferência{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Conferência de registros</h1>
+    <p>
+        Compare informações e identifique inconsistências
+        entre as fontes de dados.
+    </p>
+</div>
+<!-- Formulário de consulta -->
+<section class="card">
+    <h2>Consultar registro</h2>
+    <form method="POST"
+          action="{{ url_for('conferencia') }}">
+        <input
+            type="text"
+            id="codigo"
+            name="codigo"
+            placeholder="Informe o código. Ex.: REG-001"
+            aria-label="Código do registro"
+            value="{{ codigo }}"
+            required
+        >
+        <button type="submit">
+            <i class="bi bi-search"></i>
+            Conferir
+        </button>
+    </form>
+</section>
+<!-- Mensagem de erro -->
+{% if mensagem %}
+    <div class="result-banner result-danger">
+        <i class="bi bi-exclamation-circle"></i>
+        <div>
+            <strong>Não foi possível realizar a consulta</strong>
+            <p>{{ mensagem }}</p>
+        </div>
+    </div>
+{% endif %}
+{% if comparacao %}
+    <!-- Resumo da conferência -->
+    {% if comparacao.fonte_ausente %}
+        <div class="result-banner result-danger">
+            <i class="bi bi-x-circle"></i>
+            <div>
+                <strong>Registro ausente em uma das fontes</strong>
+                <p>
+                    Fonte ausente:
+                    {{ comparacao.fonte_ausente }}.
+                </p>
+            </div>
+        </div>
+    {% elif comparacao.divergencias %}
+        <div class="result-banner result-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div>
+                <strong>Divergência encontrada</strong>
+                <p>
+                    {{ comparacao.divergencias | length }}
+                    campo(s) apresenta(m) informações diferentes.
+                </p>
+            </div>
+        </div>
+    {% else %}
+        <div class="result-banner result-success">
+            <i class="bi bi-check-circle"></i>
+            <div>
+                <strong>Registros correspondentes</strong>
+                <p>
+                    Nenhuma divergência foi encontrada
+                    entre as fontes de dados.
+                </p>
+            </div>
+        </div>
+    {% endif %}
+    <!-- Comparação dos registros -->
+    <section class="card">
+        <div class="section-header">
+            <h2>Comparação entre fontes</h2>
+            <span class="record-code">
+                {{ codigo }}
+            </span>
+        </div>
+        {% set campos = [
+            ('nome', 'Nome'),
+            ('cpf', 'CPF'),
+            ('tipo_registro', 'Tipo de registro'),
+            ('data_registro', 'Data do registro'),
+            ('status', 'Status')
+        ] %}
+        <div class="table-container">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Campo</th>
+                        <th>
+                            <i class="bi bi-database"></i>
+                            Cadastro principal
+                        </th>
+                        <th>
+                            <i class="bi bi-database"></i>
+                            Sistema secundário
+                        </th>
+                        <th>Situação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for campo, titulo in campos %}
+                        <tr class="{% if comparacao.fonte_ausente %}missing-row{% elif campo in comparacao.divergencias %}divergent-row{% endif %}">
+                            <td class="field-name">
+                                {{ titulo }}
+                            </td>
+                            <td>
+                                {% if resultado.principal %}
+                                    {{ resultado.principal[campo] }}
+                                {% else %}
+                                    <span class="missing-value">
+                                        Não encontrado
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if resultado.secundario %}
+                                    {{ resultado.secundario[campo] }}
+                                {% else %}
+                                    <span class="missing-value">
+                                        Não encontrado
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if comparacao.fonte_ausente %}
+                                    <span class="badge badge-danger">
+                                        <i class="bi bi-x-circle"></i>
+                                        Ausente
+                                    </span>
+                                {% elif campo in comparacao.divergencias %}
+                                    <span class="badge badge-warning">
+                                        <i class="bi bi-exclamation-circle"></i>
+                                        Divergente
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-success">
+                                        <i class="bi bi-check-circle"></i>
+                                        Igual
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="comparison-legend">
+            <span>
+                <i class="bi bi-check-circle text-success"></i>
+                Informações correspondentes
+            </span>
+            <span>
+                <i class="bi bi-exclamation-circle text-warning"></i>
+                Informações divergentes
+            </span>
+            <span>
+                <i class="bi bi-x-circle text-danger"></i>
+                Fonte ausente
+            </span>
+        </div>
+    </section>
+    <!-- Análise da inteligência artificial -->
+    {% if analise_ia %}
+        <section class="analise-ia">
+            <div class="ai-header">
+                <div class="ai-icon">
+                    <i class="bi bi-stars"></i>
+                </div>
+                <div>
+                    <h2>Análise da inteligência artificial</h2>
+                    <span>Assistente de auditoria · Gemini</span>
+                </div>
+            </div>
+            <div class="ai-response">
+                <p>{{ analise_ia }}</p>
+            </div>
+            <div class="ai-disclaimer">
+                <i class="bi bi-info-circle"></i>
+                A análise da IA é auxiliar e não substitui
+                a conferência humana dos documentos originais.
+            </div>
+        </section>
+    {% endif %}
+    <!-- Ações -->
+    <div class="conference-actions">
+        <!-- Emissão de relatório -->
+        {% if id_auditoria %}
+            <a href="{{ url_for(
+                'relatorio',
+                id_auditoria=id_auditoria
+            ) }}"
+               class="btn-secondary"
+               target="_blank"
+               rel="noopener">
+                <i class="bi bi-file-earmark-pdf"></i>
+                Emitir relatório
+            </a>
+        {% endif %}
+        <a href="{{ url_for('registros') }}"
+           class="btn-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Voltar aos registros
+        </a>
+        <a href="{{ url_for('conferencia') }}"
+           class="btn-secondary">
+            <i class="bi bi-arrow-repeat"></i>
+            Nova conferência
+        </a>
+    </div>
+{% elif not mensagem %}
+    <!-- Estado inicial -->
+    <section class="card">
+        <div class="empty-state conference-empty">
+            <i class="bi bi-file-earmark-check"></i>
+            <h3>Nenhum registro consultado</h3>
+            <p>
+                Informe o código de um registro para iniciar
+                a conferência entre as fontes de dados.
+            </p>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

@@ -1,78 +1,122 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Registros</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h1>Sistema Inteligente de Consulta e Conferência</h1>
-
-    <form method="POST">
-        <label for="codigo">Código do registro:</label>
+{% extends "base.html" %}
+{% block title %}Visão geral | AuditReg{% endblock %}
+{% block breadcrumb %}Visão geral{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Visão geral</h1>
+    <p>Acompanhe a situação dos registros e das conferências.</p>
+</div>
+<!-- Indicadores -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <span>
+            <i class="bi bi-folder2-open"></i>
+            Total de registros
+        </span>
+        <h2 class="text-primary">
+            {{ indicadores.total }}
+        </h2>
+    </div>
+    <div class="stat-card">
+        <span>
+            <i class="bi bi-check-circle"></i>
+            Correspondentes
+        </span>
+        <h2 class="text-success">
+            {{ indicadores.correspondentes }}
+        </h2>
+    </div>
+    <div class="stat-card">
+        <span>
+            <i class="bi bi-exclamation-triangle"></i>
+            Divergentes
+        </span>
+        <h2 class="text-warning">
+            {{ indicadores.divergentes }}
+        </h2>
+    </div>
+    <div class="stat-card">
+        <span>
+            <i class="bi bi-x-circle"></i>
+            Ausentes
+        </span>
+        <h2 class="text-danger">
+            {{ indicadores.ausentes }}
+        </h2>
+    </div>
+</div>
+<!-- Consulta rápida -->
+<section class="card">
+    <h2>Consulta rápida</h2>
+    <form action="{{ url_for('conferencia') }}" method="POST">
         <input
             type="text"
-            id="codigo"
             name="codigo"
-            placeholder="Ex.: REG-001"
-            value="{{ codigo }}"
+            placeholder="Informe o código do registro. Ex.: REG-001"
+            aria-label="Código do registro"
             required
         >
-        <button type="submit">Consultar</button>
+        <button type="submit">
+            <i class="bi bi-search"></i>
+            Consultar
+        </button>
     </form>
-
-    {% if mensagem %}
-        <p>{{ mensagem }}</p>
+</section>
+<!-- Registros com inconsistências -->
+<section class="card">
+    <h2>Registros que precisam de atenção</h2>
+    {% if pendencias %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Registro</th>
+                        <th>Situação</th>
+                        <th>Inconsistência</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for registro in pendencias %}
+                        <tr>
+                            <td>{{ registro.codigo }}</td>
+                            <td>
+                                {% if registro.fonte_ausente %}
+                                    <span class="badge badge-danger">
+                                        Ausente
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-warning">
+                                        Divergente
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if registro.fonte_ausente %}
+                                    {{ registro.fonte_ausente }}
+                                {% else %}
+                                    {% for campo in registro.divergencias %}
+                                        {{ campo | replace('_', ' ') | capitalize }}
+                                        {% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a class="table-link"
+                                   href="{{ url_for('conferencia', codigo=registro.codigo) }}">
+                                    Conferir
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">
+            Nenhuma inconsistência encontrada.
+        </p>
     {% endif %}
-
-    {% if comparacao %}
-        <h2>Resultado da conferência</h2>
-        <p><strong>Situação:</strong> {{ comparacao.situacao }}</p>
-
-        <h3>Cadastro principal</h3>
-        {% if resultado.principal %}
-            <ul>
-                {% for campo, valor in resultado.principal.items() %}
-                    <li><strong>{{ campo }}:</strong> {{ valor }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>Registro ausente nesta fonte.</p>
-        {% endif %}
-
-        <h3>Sistema secundário</h3>
-        {% if resultado.secundario %}
-            <ul>
-                {% for campo, valor in resultado.secundario.items() %}
-                    <li><strong>{{ campo }}:</strong> {{ valor }}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>Registro ausente nesta fonte.</p>
-        {% endif %}
-
-        {% if comparacao.divergencias %}
-            <h3>Divergências encontradas</h3>
-            <ul>
-                {% for campo, valores in comparacao.divergencias.items() %}
-                    <li>
-                        <strong>{{ campo }}:</strong>
-                        Principal: {{ valores.principal }} |
-                        Secundário: {{ valores.secundario }}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endif %}
-
-    <!-- Análise gerada pelo Gemini -->
-    {% if analise_ia %}
-        <section class="analise-ia">
-            <h2>Análise da Inteligência Artificial</h2>
-            <p>{{ analise_ia }}</p>
-        </section>
-    {% endif %}
-
-</body>
-</html>
+</section>
+{% endblock %}

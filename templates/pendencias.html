@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+{% block title %}Pendências | AuditReg{% endblock %}
+{% block breadcrumb %}Pendências{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Gestão de pendências</h1>
+    <p>
+        Acompanhe o tratamento das inconsistências
+        identificadas nos registros.
+    </p>
+</div>
+<!-- Mensagens -->
+{% if mensagem == "sucesso" %}
+    <div class="result-banner result-success">
+        <i class="bi bi-check-circle"></i>
+        <div>
+            <strong>Pendência atualizada</strong>
+            <p>As alterações foram salvas com sucesso.</p>
+        </div>
+    </div>
+{% elif mensagem == "retificada" %}
+    <div class="result-banner result-success" role="status">
+        <i class="bi bi-check-circle" aria-hidden="true"></i>
+        <div>
+            <strong>Retificação registrada</strong>
+            <p>A pendência foi reavaliada com os valores atuais.</p>
+        </div>
+    </div>
+{% elif mensagem == "erro" %}
+    <div class="result-banner result-danger">
+        <i class="bi bi-exclamation-circle"></i>
+        <div>
+            <strong>Não foi possível salvar</strong>
+            <p>
+                Verifique os dados informados. A pendência somente
+                poderá ser concluída se a inconsistência for eliminada
+                e uma observação for registrada.
+            </p>
+        </div>
+    </div>
+{% elif mensagem == "retificacao_sucesso" %}
+    <div class="result-banner result-success">
+        <i class="bi bi-check-circle"></i>
+        <div>
+            <strong>Retificação realizada</strong>
+            <p>
+                A divergência foi eliminada e a alteração
+                foi registrada no histórico.
+            </p>
+        </div>
+    </div>
+{% elif mensagem == "retificacao_erro" %}
+    <div class="result-banner result-danger">
+        <i class="bi bi-exclamation-circle"></i>
+        <div>
+            <strong>Não foi possível realizar a retificação</strong>
+            <p>
+                Confira os valores atuais, a fonte selecionada
+                e a justificativa. A correção deve eliminar
+                a divergência.
+            </p>
+        </div>
+    </div>
+{% endif %}
+<!-- Indicadores -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <span>
+            <i class="bi bi-clipboard-list"></i>
+            Total de pendências
+        </span>
+        <h2 class="text-primary">
+            {{ indicadores.total }}
+        </h2>
+    </div>
+    <div class="stat-card">
+        <span>
+            <i class="bi bi-clock"></i>
+            Pendentes
+        </span>
+        <h2 class="text-warning">
+            {{ indicadores.pendentes }}
+        </h2>
+    </div>
+    <div class="stat-card">
+        <span>
+            <i class="bi bi-search"></i>
+            Em análise
+        </span>
+        <h2 class="text-primary">
+            {{ indicadores.em_analise }}
+        </h2>
+    </div>
+    <div class="stat-card">
+        <span>
+            <i class="bi bi-check-circle"></i>
+            Resolvidas
+        </span>
+        <h2 class="text-success">
+            {{ indicadores.resolvidas }}
+        </h2>
+    </div>
+</div>
+<!-- Pesquisa e filtros -->
+<section class="card">
+    <h2>Pesquisar pendências</h2>
+    <form method="GET"
+          action="{{ url_for('pendencias') }}"
+          class="filter-form">
+        <input
+            type="text"
+            name="busca"
+            placeholder="Pesquisar por código ou inconsistência..."
+            aria-label="Pesquisar pendências"
+            value="{{ busca }}"
+        >
+        <select name="status" aria-label="Status">
+            <option value="">Todos os status</option>
+            {% for opcao in ["Pendente", "Em análise", "Resolvida"] %}
+                <option value="{{ opcao }}"
+                    {{ 'selected' if status == opcao else '' }}>
+                    {{ opcao }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="submit">
+            <i class="bi bi-search"></i>
+            Filtrar
+        </button>
+        {% if busca or status %}
+            <a href="{{ url_for('pendencias') }}"
+               class="btn-secondary">
+                Limpar
+            </a>
+        {% endif %}
+    </form>
+</section>
+<!-- Lista de pendências -->
+<section class="card">
+    <div class="section-header">
+        <h2>Pendências identificadas</h2>
+        <span class="result-count">
+            {{ pendencias | length }} pendência(s)
+        </span>
+    </div>
+    {% for pendencia in pendencias %}
+        <details class="pending-item"
+                 id="pendencia-{{ pendencia.id }}"
+                 {% if id_aberto == pendencia.id %}open{% endif %}>
+            <summary class="pending-summary">
+                <div class="pending-info">
+                    <span class="record-code">
+                        {{ pendencia.codigo_registro }}
+                    </span>
+                    <strong>
+                        {{ pendencia.descricao }}
+                    </strong>
+                </div>
+                {% if pendencia.status == "Pendente" %}
+                    <span class="badge badge-warning">
+                        <i class="bi bi-clock"></i>
+                        Pendente
+                    </span>
+                {% elif pendencia.status == "Em análise" %}
+                    <span class="badge badge-info">
+                        <i class="bi bi-search"></i>
+                        Em análise
+                    </span>
+                {% else %}
+                    <span class="badge badge-success">
+                        <i class="bi bi-check-circle"></i>
+                        Resolvida
+                    </span>
+                {% endif %}
+                <span class="manage-link">
+                    Gerenciar
+                    <i class="bi bi-chevron-down"></i>
+                </span>
+            </summary>
+            <!-- Painel de gerenciamento -->
+            <div class="pending-content">
+                <div class="pending-metadata">
+                    <div>
+                        <span>Identificada em (UTC)</span>
+                        <strong>
+                            {{ pendencia.data_criacao }}
+                        </strong>
+                    </div>
+                    <div>
+                        <span>Última atualização (UTC)</span>
+                        <strong>
+                            {{ pendencia.data_atualizacao }}
+                        </strong>
+                    </div>
+                </div>
+                <!-- Formulário de acompanhamento -->
+                <form method="POST"
+                      class="pending-form"
+                      action="{{ url_for(
+                          'salvar_pendencia',
+                          id_pendencia=pendencia.id
+                      ) }}">
+                    <div class="form-field">
+                        <label for="status-{{ pendencia.id }}">
+                            Status de acompanhamento
+                        </label>
+                        <select name="status"
+                                id="status-{{ pendencia.id }}">
+                            {% set opcoes = ["Resolvida"]
+                                if pendencia.status == "Resolvida"
+                                else ["Pendente", "Em análise"] %}
+                            {% for opcao in opcoes %}
+                                <option value="{{ opcao }}"
+                                    {{ 'selected' if pendencia.status == opcao else '' }}>
+                                    {{ opcao }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="obs-{{ pendencia.id }}">
+                            Observações
+                        </label>
+                        <textarea
+                            name="observacao"
+                            id="obs-{{ pendencia.id }}"
+                            rows="4"
+                            maxlength="2000"
+                            placeholder="Registre as ações realizadas ou informações relevantes..."
+                        >{{ pendencia.observacao }}</textarea>
+                        <small>
+                            O sistema atualiza a resolução
+                            ao verificar as duas fontes.
+                        </small>
+                    </div>
+                    <div class="pending-notice">
+                        <i class="bi bi-info-circle"></i>
+                        Alterar o status da pendência não modifica
+                        os dados originais do registro.
+                    </div>
+                    <div class="pending-actions">
+                        <a class="btn-secondary"
+                           href="{{ url_for(
+                               'conferencia',
+                               codigo=pendencia.codigo_registro
+                           ) }}">
+                            <i class="bi bi-file-earmark-check"></i>
+                            Conferir registro
+                        </a>
+                        <button type="submit">
+                            <i class="bi bi-save"></i>
+                            Salvar alterações
+                        </button>
+                    </div>
+                </form>
+                <!-- Formulário único de retificação -->
+                {% if pendencia.retificacao and pendencia.status != "Resolvida" %}
+                    <section class="retification-section">
+                        <h3>
+                            <i class="bi bi-pencil-square"></i>
+                            Retificação de registro
+                        </h3>
+                        <p class="retification-description">
+                            Corrija a informação divergente após
+                            conferir a documentação original.
+                        </p>
+                        <div class="retification-values">
+                            <div class="retification-value">
+                                <span>Cadastro principal</span>
+                                <strong>
+                                    {{ pendencia.retificacao.principal }}
+                                </strong>
+                            </div>
+                            <div class="retification-value">
+                                <span>Sistema secundário</span>
+                                <strong>
+                                    {{ pendencia.retificacao.secundario }}
+                                </strong>
+                            </div>
+                        </div>
+                        <form method="POST"
+                              class="pending-form"
+                              action="{{ url_for(
+                                  'salvar_retificacao',
+                                  id_pendencia=pendencia.id
+                              ) }}">
+                            <input
+                                type="hidden"
+                                name="valor_principal"
+                                value="{{ pendencia.retificacao.principal }}"
+                            >
+                            <input
+                                type="hidden"
+                                name="valor_secundario"
+                                value="{{ pendencia.retificacao.secundario }}"
+                            >
+                            <div class="form-field">
+                                <label for="fonte-{{ pendencia.id }}">
+                                    Fonte a ser corrigida
+                                </label>
+                                <select name="fonte"
+                                        id="fonte-{{ pendencia.id }}"
+                                        required>
+                                    <option value="">
+                                        Selecione a fonte
+                                    </option>
+                                    <option value="principal">
+                                        Cadastro principal
+                                    </option>
+                                    <option value="secundario">
+                                        Sistema secundário
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="valor-{{ pendencia.id }}">
+                                    Valor correto
+                                </label>
+                                <input
+                                    type="text"
+                                    name="valor_novo"
+                                    id="valor-{{ pendencia.id }}"
+                                    maxlength="255"
+                                    placeholder="Informe o valor correto"
+                                    required
+                                >
+                            </div>
+                            <div class="form-field">
+                                <label for="just-{{ pendencia.id }}">
+                                    Justificativa da correção
+                                </label>
+                                <textarea
+                                    name="justificativa"
+                                    id="just-{{ pendencia.id }}"
+                                    rows="3"
+                                    maxlength="2000"
+                                    placeholder="Explique o motivo da alteração..."
+                                    required
+                                ></textarea>
+                            </div>
+                            <div class="pending-notice">
+                                <i class="bi bi-info-circle"></i>
+                                A alteração será armazenada no histórico
+                                de retificações.
+                            </div>
+                            <button type="submit">
+                                <i class="bi bi-check-circle"></i>
+                                Aplicar correção e verificar
+                            </button>
+                        </form>
+                    </section>
+                {% endif %}
+            </div>
+        </details>
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-clipboard-check"></i>
+            <h3>Nenhuma pendência encontrada</h3>
+            <p>
+                Não existem pendências para os filtros selecionados.
+            </p>
+        </div>
+    {% endfor %}
+</section>
+{% endblock %}

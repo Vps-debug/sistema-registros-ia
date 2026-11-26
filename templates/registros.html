@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+{% block title %}Registros | AuditReg{% endblock %}
+{% block breadcrumb %}Registros{% endblock %}
+<!-- Campos reutilizáveis dos formulários -->
+{% macro campos_cadastro(dados) %}
+    <div class="form-field">
+        <label>Nome fictício</label>
+        <input type="text"
+               name="nome"
+               value="{{ dados.get('nome', '') }}"
+               maxlength="255"
+               required>
+    </div>
+    <div class="form-field">
+        <label>CPF fictício</label>
+        <input type="text"
+               name="cpf"
+               value="{{ dados.get('cpf', '') }}"
+               placeholder="00000000000"
+               pattern="[0-9]{11}"
+               maxlength="11"
+               required>
+    </div>
+    <div class="form-field">
+        <label>Tipo de registro</label>
+        <input type="text"
+               name="tipo_registro"
+               value="{{ dados.get('tipo_registro', '') }}"
+               placeholder="Ex.: Imóvel"
+               maxlength="255"
+               required>
+    </div>
+    <div class="form-field">
+        <label>Data de registro</label>
+        <input type="date"
+               name="data_registro"
+               value="{{ dados.get('data_registro', '') }}"
+               required>
+    </div>
+    <div class="form-field">
+        <label>Status</label>
+        <select name="status" required>
+            {% for opcao in ["Ativo", "Pendente", "Inativo"] %}
+                <option value="{{ opcao }}"
+                    {{ 'selected' if dados.get('status') == opcao else '' }}>
+                    {{ opcao }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+{% endmacro %}
+{% block content %}
+<!-- Cabeçalho -->
+<div class="page-header">
+    <h1>Registros</h1>
+    <p>
+        Consulte e acompanhe os registros das fontes cadastradas.
+    </p>
+</div>
+<!-- Mensagens do sistema -->
+{% if mensagem %}
+    <div class="result-banner result-info" role="status">
+        <i class="bi bi-info-circle"></i>
+        <div>
+            <strong>{{ mensagem }}</strong>
+        </div>
+    </div>
+{% endif %}
+<!-- Gerenciamento de cadastros -->
+<section class="card cadastro-tools">
+    <div class="section-header">
+        <div>
+            <h2>Gerenciamento de cadastros</h2>
+            <p class="cadastro-description">
+                Ferramentas para simulação com dados fictícios.
+            </p>
+        </div>
+    </div>
+    <!-- Indicador de capacidade -->
+    <div class="capacity-container">
+        <div class="capacity-header">
+            <span>Capacidade de registros</span>
+            <strong>
+                {{ capacidade.total }} / {{ capacidade.limite }}
+            </strong>
+        </div>
+        <progress class="capacity-track {{ 'capacity-full' if capacidade.percentual >= 100 else 'capacity-warning' if capacidade.percentual >= 80 else '' }}"
+                  value="{{ capacidade.percentual }}" max="100"
+                  aria-label="Capacidade de registros"></progress>
+        <div class="capacity-footer">
+            <span>
+                {{ capacidade.percentual }}% utilizado
+            </span>
+            <span>
+                {{ capacidade.disponiveis }} vagas disponíveis
+            </span>
+        </div>
+        {% if capacidade.disponiveis == 0 %}
+            <p class="capacity-notice">
+                <i class="bi bi-exclamation-circle"></i>
+                Limite atingido. Exclua um registro completamente
+                para liberar espaço.
+            </p>
+        {% endif %}
+    </div>
+    <div class="cadastro-tools-grid">
+        <!-- Gerador automático -->
+        <details class="cadastro-panel">
+            <summary>
+                <i class="bi bi-database-add"></i>
+                Gerar registros
+                <i class="bi bi-chevron-down cadastro-chevron"></i>
+            </summary>
+            <form method="POST"
+                  action="{{ url_for('gerar_cadastros') }}"
+                  class="pending-form cadastro-form">
+                <div class="form-field">
+                    <label>Quantidade</label>
+                    <select name="quantidade" required
+                        {{ 'disabled' if capacidade.disponiveis == 0 else '' }}>
+                        {% for quantidade in range(
+                            1,
+                            ([limite_geracao, capacidade.disponiveis] | min) + 1
+                        ) %}
+                            <option value="{{ quantidade }}"
+                                {{ 'selected' if quantidade == 5 else '' }}>
+                                {{ quantidade }} registro(s)
+                            </option>
+                        {% else %}
+                            <option value="">
+                                Nenhuma vaga disponível
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label>Tipo de geração</label>
+                    <select name="modo">
+                        <option value="misto">
+                            Distribuição mista
+                        </option>
+                        <option value="correto">
+                            Correspondentes
+                        </option>
+                        <option value="divergente">
+                            Com divergências
+                        </option>
+                        <option value="ausente">
+                            Com fontes ausentes
+                        </option>
+                    </select>
+                </div>
+                <button type="submit"
+                    {{ 'disabled' if capacidade.disponiveis == 0 else '' }}>
+                    <i class="bi bi-plus-circle"></i>
+                    Gerar registros
+                </button>
+            </form>
+        </details>
+        <!-- Cadastro manual -->
+        <details class="cadastro-panel">
+            <summary>
+                <i class="bi bi-person-plus"></i>
+                Novo cadastro
+                <i class="bi bi-chevron-down cadastro-chevron"></i>
+            </summary>
+            <form method="POST"
+                  action="{{ url_for('novo_cadastro') }}"
+                  class="pending-form cadastro-form">
+                {{ campos_cadastro({}) }}
+                <div class="form-field">
+                    <label>Fonte de cadastro</label>
+                    <select name="fonte" required>
+                        <option value="ambas">
+                            Ambas as fontes
+                        </option>
+                        <option value="principal">
+                            Cadastro principal
+                        </option>
+                        <option value="secundario">
+                            Sistema secundário
+                        </option>
+                    </select>
+                </div>
+                <button type="submit"
+                    {{ 'disabled' if capacidade.disponiveis == 0 else '' }}>
+                    <i class="bi bi-save"></i>
+                    Criar cadastro
+                </button>
+            </form>
+        </details>
+    </div>
+</section>
+<!-- Edição e exclusão de cadastro -->
+{% if cadastro_edicao %}
+    <section class="card" id="editar-cadastro">
+        <div class="section-header">
+            <h2>Editar {{ editar }}</h2>
+            <a href="{{ url_for(
+                'registros',
+                pagina=pagina,
+                busca=busca,
+                situacao=situacao
+            ) }}"
+               class="btn-secondary">
+                <i class="bi bi-x-lg"></i>
+                Fechar
+            </a>
+        </div>
+        {% if cadastro_edicao.principal or cadastro_edicao.secundario %}
+            <p class="cadastro-description">
+                Alterações de demonstração podem gerar
+                novas inconsistências entre as fontes.
+            </p>
+            <!-- Formulários das duas fontes -->
+            <div class="cadastro-tools-grid">
+                {% for fonte, titulo in [
+                    ('principal', 'Cadastro principal'),
+                    ('secundario', 'Sistema secundário')
+                ] %}
+                    <div class="cadastro-edit-panel">
+                        <h3>{{ titulo }}</h3>
+                        {% if cadastro_edicao[fonte] %}
+                            <form method="POST"
+                                  class="pending-form"
+                                  action="{{ url_for(
+                                      'salvar_edicao',
+                                      codigo=editar
+                                  ) }}">
+                                <input type="hidden"
+                                       name="fonte"
+                                       value="{{ fonte }}">
+                                {{ campos_cadastro(
+                                    cadastro_edicao[fonte]
+                                ) }}
+                                <button type="submit">
+                                    <i class="bi bi-save"></i>
+                                    Salvar alterações
+                                </button>
+                            </form>
+                        {% else %}
+                            <p class="cadastro-description">
+                                Registro ausente nesta fonte.
+                            </p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <!-- Exclusão de cadastro -->
+            <details class="delete-panel">
+                <summary>
+                    <i class="bi bi-trash3"></i>
+                    Excluir cadastro
+                </summary>
+                <form method="POST"
+                      class="pending-form delete-form"
+                      action="{{ url_for(
+                          'remover_cadastro',
+                          codigo=editar
+                      ) }}">
+                    <p>
+                        Os históricos de auditorias, retificações
+                        e edições serão preservados.
+                        A exclusão não poderá ser desfeita
+                        pela interface.
+                    </p>
+                    <div class="form-field">
+                        <label>Fonte a excluir</label>
+                        <select name="fonte" required>
+                            <option value="">
+                                Selecione uma opção
+                            </option>
+                            <option value="ambas">
+                                Excluir registro completamente
+                            </option>
+                            {% if cadastro_edicao.principal %}
+                                <option value="principal">
+                                    Apenas cadastro principal
+                                </option>
+                            {% endif %}
+                            {% if cadastro_edicao.secundario %}
+                                <option value="secundario">
+                                    Apenas sistema secundário
+                                </option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    <p>
+                        Se apenas uma fonte for excluída e a outra
+                        permanecer, será identificada uma nova
+                        inconsistência.
+                    </p>
+                    <label class="delete-confirmation">
+                        <input type="checkbox"
+                               name="confirmacao"
+                               value="sim"
+                               required>
+                        Confirmo a exclusão deste cadastro fictício.
+                    </label>
+                    <button type="submit" class="btn-danger">
+                        <i class="bi bi-trash3"></i>
+                        Confirmar exclusão
+                    </button>
+                </form>
+            </details>
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-exclamation-circle"></i>
+                <h3>Cadastro não encontrado</h3>
+                <p>
+                    O registro solicitado não está mais disponível.
+                </p>
+            </div>
+        {% endif %}
+    </section>
+{% endif %}
+<!-- Pesquisa e filtros -->
+<section class="card">
+    <h2>Pesquisar registros</h2>
+    <form method="GET"
+          action="{{ url_for('registros') }}"
+          class="filter-form">
+        <input type="text"
+               name="busca"
+               placeholder="Pesquisar por código ou nome..."
+               aria-label="Pesquisar registros"
+               value="{{ busca }}">
+        <select name="situacao" aria-label="Situação">
+            <option value="">
+                Todas as situações
+            </option>
+            <option value="correspondente"
+                {{ 'selected' if situacao == 'correspondente' else '' }}>
+                Correspondentes
+            </option>
+            <option value="divergente"
+                {{ 'selected' if situacao == 'divergente' else '' }}>
+                Divergentes
+            </option>
+            <option value="ausente"
+                {{ 'selected' if situacao == 'ausente' else '' }}>
+                Ausentes
+            </option>
+        </select>
+        <button type="submit">
+            <i class="bi bi-search"></i>
+            Filtrar
+        </button>
+        {% if busca or situacao %}
+            <a href="{{ url_for('registros') }}"
+               class="btn-secondary">
+                <i class="bi bi-x-lg"></i>
+                Limpar
+            </a>
+        {% endif %}
+    </form>
+</section>
+<!-- Listagem dos registros -->
+<section class="card">
+    <div class="section-header">
+        <h2>Registros cadastrados</h2>
+        <span class="result-count">
+            {{ total_filtrado }} registro(s) encontrado(s)
+        </span>
+    </div>
+    {% if registros %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nome</th>
+                        <th>Tipo de registro</th>
+                        <th>Situação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for registro in registros %}
+                        <tr>
+                            <td class="record-code">
+                                {{ registro.codigo }}
+                            </td>
+                            <td>
+                                {{ registro.nome }}
+                            </td>
+                            <td>
+                                {{ registro.tipo }}
+                            </td>
+                            <td>
+                                {% if registro.fonte_ausente %}
+                                    <span class="badge badge-danger">
+                                        <i class="bi bi-x-circle"></i>
+                                        Ausente
+                                    </span>
+                                {% elif registro.divergencias %}
+                                    <span class="badge badge-warning">
+                                        <i class="bi bi-exclamation-circle"></i>
+                                        Divergente
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-success">
+                                        <i class="bi bi-check-circle"></i>
+                                        Correspondente
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="cadastro-actions">
+                                    <a class="table-link"
+                                       href="{{ url_for(
+                                           'conferencia',
+                                           codigo=registro.codigo
+                                       ) }}">
+                                        Conferir
+                                        <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                    <a class="cadastro-edit-link"
+                                       href="{{ url_for(
+                                           'registros',
+                                           editar=registro.codigo,
+                                           pagina=pagina,
+                                           busca=busca,
+                                           situacao=situacao
+                                       ) }}#editar-cadastro"
+                                       title="Editar ou excluir cadastro"
+                                       aria-label="Gerenciar {{ registro.codigo }}">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-search"></i>
+            <h3>Nenhum registro encontrado</h3>
+            <p>
+                Tente utilizar outros termos ou filtros.
+            </p>
+        </div>
+    {% endif %}
+    <!-- Paginação -->
+    <div class="table-footer pagination-footer">
+        <span>
+            {% if total_filtrado %}
+                Exibindo {{ inicio + 1 }} a {{ fim }}
+                de {{ total_filtrado }} registros
+            {% else %}
+                Nenhum registro encontrado
+            {% endif %}
+        </span>
+        {% if total_paginas > 1 %}
+            <nav class="pagination" aria-label="Paginação dos registros">
+                {% if pagina > 1 %}
+                    <a href="{{ url_for(
+                        'registros',
+                        pagina=pagina-1,
+                        busca=busca,
+                        situacao=situacao
+                    ) }}"
+                       aria-label="Página anterior">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                {% endif %}
+                {% for numero in range(1, total_paginas + 1) %}
+                    <a href="{{ url_for(
+                        'registros',
+                        pagina=numero,
+                        busca=busca,
+                        situacao=situacao
+                    ) }}"
+                       class="{{ 'active' if numero == pagina else '' }}"
+                       {% if numero == pagina %}aria-current="page"{% endif %}>
+                        {{ numero }}
+                    </a>
+                {% endfor %}
+                {% if pagina < total_paginas %}
+                    <a href="{{ url_for(
+                        'registros',
+                        pagina=pagina+1,
+                        busca=busca,
+                        situacao=situacao
+                    ) }}"
+                       aria-label="Próxima página">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

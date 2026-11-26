@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Assistente IA | AuditReg{% endblock %}
+{% block breadcrumb %}Assistente IA{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Assistente inteligente</h1>
+    <p>
+        Consulte informações e obtenha auxílio
+        nas atividades de auditoria.
+    </p>
+</div>
+<section class="chat-container"
+         id="chat-container"
+         data-endpoint="{{ url_for('api_assistente') }}">
+    <!-- Cabeçalho do chat -->
+    <div class="chat-header">
+        <div class="chat-identity">
+            <div class="ai-icon">
+                <i class="bi bi-stars"></i>
+            </div>
+            <div>
+                <h2>Assistente AuditReg</h2>
+                <span>
+                    Google Gemini · Consulta de dados
+                </span>
+            </div>
+        </div>
+        <button type="button"
+                class="btn-secondary"
+                id="nova-conversa">
+            <i class="bi bi-plus-lg"></i>
+            Nova conversa
+        </button>
+    </div>
+    <!-- Mensagens -->
+    <div class="chat-messages"
+         id="chat-messages"
+         role="log"
+         aria-live="polite">
+        <div class="chat-message assistant">
+            <div class="message-avatar">
+                <i class="bi bi-stars"></i>
+            </div>
+            <div class="message-content">
+                Olá! Sou o assistente de auditoria do AuditReg.
+                Posso ajudar a consultar registros, identificar
+                inconsistências e acompanhar as pendências
+                do sistema.
+            </div>
+        </div>
+        <!-- Sugestões iniciais -->
+        <div class="chat-suggestions"
+             id="chat-suggestions">
+            <span>Sugestões de perguntas</span>
+            <button type="button" class="suggestion">
+                Quais registros apresentam divergências?
+            </button>
+            <button type="button" class="suggestion">
+                Quantas pendências estão em aberto?
+            </button>
+            <button type="button" class="suggestion">
+                Qual é a inconsistência do REG-001?
+            </button>
+            <button type="button" class="suggestion">
+                Resuma a situação atual dos registros.
+            </button>
+        </div>
+    </div>
+    <!-- Área de envio -->
+    <div class="chat-footer">
+        <form id="chat-form">
+            <textarea
+                id="chat-input"
+                rows="1"
+                maxlength="2000"
+                placeholder="Faça uma pergunta sobre os registros..."
+                aria-label="Mensagem para o assistente"
+                required
+            ></textarea>
+            <button type="submit"
+                    id="chat-send"
+                    aria-label="Enviar mensagem">
+                <i class="bi bi-send"></i>
+            </button>
+        </form>
+        <p class="chat-disclaimer">
+            A inteligência artificial pode cometer erros.
+            Não envie dados pessoais reais.
+            Verifique as informações fornecidas.
+        </p>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,34 @@
+<form method="post" class="pending-form rectification-form"
+      action="{{ url_for('salvar_retificacao', id_pendencia=pendencia.id) }}">
+    {% set dados = pendencia.retificacao %}
+    <input type="hidden" name="versao" value="{{ dados.versao }}">
+    <h3>Retificar {{ pendencia.descricao | lower }}</h3>
+    <dl class="rectification-values">
+        <dt>Cadastro principal</dt>
+        <dd>{{ dados.principal if dados.principal is not none else 'Sem valor' }}</dd>
+        <dt>Sistema secundário</dt>
+        <dd>{{ dados.secundario if dados.secundario is not none else 'Sem valor' }}</dd>
+    </dl>
+    <div class="form-field">
+        <label for="fonte-{{ pendencia.id }}">Fonte a corrigir</label>
+        <select id="fonte-{{ pendencia.id }}" name="fonte" required>
+            <option value="">Selecione uma fonte</option>
+            <option value="principal">Cadastro principal</option>
+            <option value="secundario">Sistema secundário</option>
+        </select>
+    </div>
+    <div class="form-field">
+        <label for="valor-{{ pendencia.id }}">Valor confirmado no documento</label>
+        <input id="valor-{{ pendencia.id }}" name="novo_valor" required
+               {% if dados.campo == 'data_registro' %}type="date"
+               {% else %}type="text" maxlength="255"{% endif %}>
+    </div>
+    <div class="form-field">
+        <label for="justificativa-{{ pendencia.id }}">Justificativa</label>
+        <textarea id="justificativa-{{ pendencia.id }}" name="justificativa"
+                  required maxlength="2000" rows="3"></textarea>
+    </div>
+    <div class="pending-actions">
+        <button type="submit">Aplicar retificação</button>
+    </div>
+</form>

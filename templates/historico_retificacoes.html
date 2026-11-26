@@ -1,0 +1,29 @@
+<section class="card">
+    <div class="section-header">
+        <h2>Retificações de registros</h2>
+        <span class="result-count">{{ retificacoes | length }} retificação(ões)</span>
+    </div>
+    {% for item in retificacoes %}
+        <details class="pending-item">
+            <summary class="pending-summary">
+                <span class="record-code">{{ item.codigo_registro }}</span>
+                <strong>{{ item.campo | replace('_', ' ') | capitalize }}</strong>
+                <span>{{ item.data_retificacao }} UTC</span>
+            </summary>
+            <div class="pending-content">
+                <dl class="rectification-values">
+                    <dt>Fonte</dt>
+                    <dd>{{ 'Cadastro principal' if item.fonte == 'principal' else 'Sistema secundário' }}</dd>
+                    <dt>Valor anterior</dt>
+                    <dd>{{ item.valor_anterior if item.valor_anterior is not none else 'Sem valor' }}</dd>
+                    <dt>Novo valor</dt>
+                    <dd>{{ item.novo_valor }}</dd>
+                    <dt>Justificativa</dt>
+                    <dd>{{ item.justificativa }}</dd>
+                </dl>
+            </div>
+        </details>
+    {% else %}
+        <p>Nenhuma retificação encontrada.</p>
+    {% endfor %}
+</section>

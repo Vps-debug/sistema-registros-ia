@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>
+        Relatório {{ auditoria.codigo_registro }} | AuditReg
+    </title>
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            background: #f1f0ed;
+            color: #292d2d;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .toolbar {
+            max-width: 850px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .toolbar button,
+        .toolbar a {
+            padding: 11px 18px;
+            border: 1px solid #946b48;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .print-button {
+            background: #946b48;
+            color: white;
+        }
+
+        .back-button {
+            background: white;
+            color: #946b48;
+        }
+
+        .report {
+            max-width: 850px;
+            margin: auto;
+            padding: 45px;
+            background: white;
+            box-shadow: 0 3px 15px rgba(0,0,0,.08);
+            overflow-wrap: anywhere;
+        }
+
+        .report-header {
+            border-bottom: 3px solid #946b48;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .brand {
+            font-size: 30px;
+            font-weight: bold;
+            letter-spacing: -1px;
+            color: #292d2d;
+        }
+
+        .brand span {
+            color: #946b48;
+        }
+
+        .subtitle {
+            color: #777;
+            font-size: 13px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin: 0 0 5px;
+        }
+
+        h2 {
+            font-size: 17px;
+            margin: 0 0 15px;
+        }
+
+        .academic-label {
+            font-size: 12px;
+            color: #777;
+        }
+
+        .report-section {
+            margin-top: 28px;
+        }
+
+        .metadata {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 25px;
+            padding: 20px;
+            border: 1px solid #dedbd6;
+            border-radius: 6px;
+        }
+
+        .metadata span {
+            display: block;
+            color: #777;
+            font-size: 12px;
+        }
+
+        .result {
+            padding: 15px;
+            border-left: 4px solid;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #f0fdf4;
+            border-color: #15803d;
+            color: #166534;
+        }
+
+        .warning {
+            background: #fffbeb;
+            border-color: #d97706;
+            color: #92400e;
+        }
+
+        .danger {
+            background: #fef2f2;
+            border-color: #dc2626;
+            color: #991b1b;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            table-layout: fixed;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border: 1px solid #dedbd6;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f5f3f0;
+            font-size: 12px;
+        }
+
+        td {
+            font-size: 13px;
+        }
+
+        .ai-analysis {
+            padding: 18px;
+            background: #faf8f4;
+            border: 1px solid #e7dfd5;
+            border-radius: 6px;
+            white-space: pre-wrap;
+        }
+
+        .notice {
+            font-size: 12px;
+            color: #666;
+            padding: 15px;
+            border: 1px solid #dedbd6;
+            margin-top: 25px;
+        }
+
+        .report-footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #dedbd6;
+            text-align: center;
+            color: #777;
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+
+            body {
+                padding: 12px;
+            }
+
+            .report {
+                padding: 20px;
+            }
+
+            .metadata {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        /* Configurações de impressão */
+
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
+        @media print {
+
+            body {
+                background: white;
+                padding: 0;
+                font-size: 12px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .toolbar {
+                display: none !important;
+            }
+
+            .report {
+                max-width: none;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+
+            .metadata,
+            .result,
+            tr,
+            .report-header,
+            .report-footer {
+                break-inside: avoid;
+            }
+
+            h2 {
+                break-after: avoid;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Ações que não aparecem na impressão -->
+    <div class="toolbar">
+        <a href="{{ url_for('historico') }}"
+           class="back-button">
+            Voltar ao histórico
+        </a>
+        <button class="print-button"
+                onclick="window.print()">
+            Imprimir / Salvar PDF
+        </button>
+    </div>
+    <!-- Documento -->
+    <main class="report">
+        <header class="report-header">
+            <div class="brand">
+                Audit<span>Reg</span>
+            </div>
+            <div class="subtitle">
+                Sistema de Auditoria Inteligente
+            </div>
+        </header>
+        <h1>Relatório de conferência</h1>
+        <div class="academic-label">
+            Ambiente acadêmico — Dados fictícios
+        </div>
+        <!-- Identificação -->
+        <div class="metadata">
+            <div>
+                <span>Identificador da auditoria</span>
+                <strong>#{{ auditoria.id }}</strong>
+            </div>
+            <div>
+                <span>Código do registro</span>
+                <strong>
+                    {{ auditoria.codigo_registro }}
+                </strong>
+            </div>
+            <div>
+                <span>Data da conferência (UTC)</span>
+                <strong>
+                    {{ auditoria.data_conferencia }}
+                </strong>
+            </div>
+            <div>
+                <span>Resultado original</span>
+                <strong>
+                    {{ auditoria.situacao }}
+                </strong>
+            </div>
+        </div>
+        <!-- Resultado da conferência -->
+        <section class="report-section">
+            <h2>1. Resultado da conferência</h2>
+            {% if auditoria.fonte_ausente %}
+                <div class="result danger">
+                    <strong>
+                        Registro ausente em uma das fontes
+                    </strong>
+                    <div>
+                        Fonte ausente:
+                        {{ auditoria.fonte_ausente }}.
+                    </div>
+                </div>
+            {% elif auditoria.divergencias %}
+                <div class="result warning">
+                    <strong>
+                        Divergência encontrada
+                    </strong>
+                    <div>
+                        Foram identificadas
+                        {{ auditoria.divergencias | length }}
+                        divergência(s) entre as fontes.
+                    </div>
+                </div>
+            {% else %}
+                <div class="result success">
+                    <strong>
+                        Registros correspondentes
+                    </strong>
+                    <div>
+                        Nenhuma divergência foi identificada
+                        durante esta conferência.
+                    </div>
+                </div>
+            {% endif %}
+        </section>
+        <!-- Divergências armazenadas -->
+        <section class="report-section">
+            <h2>2. Inconsistências identificadas</h2>
+            {% if auditoria.fonte_ausente %}
+                <p>
+                    Não foi possível realizar a comparação
+                    completa devido à ausência de uma
+                    das fontes de dados.
+                </p>
+            {% elif auditoria.divergencias %}
+                {% set nomes_campos = {
+                    'nome': 'Nome',
+                    'cpf': 'CPF',
+                    'tipo_registro': 'Tipo de registro',
+                    'data_registro': 'Data do registro',
+                    'status': 'Status'
+                } %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Campo</th>
+                            <th>Cadastro principal</th>
+                            <th>Sistema secundário</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for campo, valores in
+                            auditoria.divergencias.items() %}
+                            <tr>
+                                <td>
+                                    {{ nomes_campos.get(
+                                        campo,
+                                        campo
+                                    ) }}
+                                </td>
+                                <td>
+                                    {{ valores.principal }}
+                                </td>
+                                <td>
+                                    {{ valores.secundario }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>
+                    Não existem inconsistências registradas
+                    nesta auditoria.
+                </p>
+            {% endif %}
+        </section>
+        <!-- Análise da IA -->
+        <section class="report-section">
+            <h2>3. Análise da inteligência artificial</h2>
+            {% if auditoria.analise_ia %}
+                <div class="ai-analysis">{{ auditoria.analise_ia }}</div>
+            {% else %}
+                <p>
+                    Nenhuma análise da IA foi armazenada
+                    nesta conferência.
+                </p>
+            {% endif %}
+        </section>
+        <!-- Observações -->
+        <div class="notice">
+            <strong>Observações importantes</strong>
+            <p>
+                Este relatório representa o resultado
+                armazenado no momento da conferência.
+                Alterações posteriores nos cadastros
+                não modificam este documento.
+            </p>
+            <p>
+                A análise da inteligência artificial
+                possui caráter auxiliar e não substitui
+                a validação humana dos documentos originais.
+            </p>
+            <p>
+                Documento demonstrativo, sem validade
+                jurídica ou certificação oficial.
+            </p>
+        </div>
+        <footer class="report-footer">
+            AuditReg — Sistema de Auditoria Inteligente
+            <div>
+                Relatório gerado a partir da auditoria
+                #{{ auditoria.id }}
+            </div>
+        </footer>
+    </main>
+</body>
+</html>
+S

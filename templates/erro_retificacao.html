@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Retificação | AuditReg{% endblock %}
+{% block breadcrumb %}Pendências{% endblock %}
+{% block content %}
+<section class="card">
+    <h1>Não foi possível salvar a retificação</h1>
+    <p role="alert">{{ erro }}</p>
+    <a class="btn-secondary" href="{{ url_for('pendencias', aberta=id_pendencia, _anchor='pendencia-' ~ id_pendencia) }}">Voltar à pendência</a>
+</section>
+{% endblock %}

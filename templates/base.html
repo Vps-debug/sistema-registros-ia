@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block title %}AuditReg{% endblock %}
+    </title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+    <!-- Biblioteca de ícones -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+    <!-- Menu lateral -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div>
+                <h2>AuditReg</h2>
+                <span>Auditoria inteligente</span>
+            </div>
+        </div>
+        <span class="menu-label">MENU PRINCIPAL</span>
+        <nav class="navigation">
+            <a href="/"
+               class="nav-link {{ 'active' if request.path == '/' else '' }}">
+                <i class="bi bi-grid-1x2"></i>
+                Visão geral
+            </a>
+            <a href="/registros"
+               class="nav-link {{ 'active' if request.path == '/registros' else '' }}">
+                <i class="bi bi-folder2-open"></i>
+                Registros
+            </a>
+            <a href="/conferencia"
+               class="nav-link {{ 'active' if request.path == '/conferencia' else '' }}">
+                <i class="bi bi-file-earmark-check"></i>
+                Conferência
+            </a>
+            <a href="/pendencias"
+               class="nav-link {{ 'active' if request.path == '/pendencias' else '' }}">
+                <i class="bi bi-exclamation-circle"></i>
+                Pendências
+            </a>
+            <a href="/assistente"
+               class="nav-link {{ 'active' if request.path == '/assistente' else '' }}">
+                <i class="bi bi-stars"></i>
+                Assistente IA
+            </a>
+            <a href="/historico"
+               class="nav-link {{ 'active' if request.path == '/historico' else '' }}">
+                <i class="bi bi-clock-history"></i>
+                Histórico
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="profile-icon">
+                <i class="bi bi-person"></i>
+            </div>
+            <div>
+                <strong>Auditoria</strong>
+                <span>Ambiente acadêmico</span>
+            </div>
+        </div>
+    </aside>
+    <!-- Área principal -->
+    <div class="main-layout">
+        <header class="topbar">
+            <div class="breadcrumb">
+                Sistema de auditoria
+                <i class="bi bi-chevron-right"></i>
+                {% block breadcrumb %}
+                    Visão geral
+                {% endblock %}
+            </div>
+            <div class="system-status">
+                <span class="status-dot"></span>
+                Ambiente local
+            </div>
+        </header>
+        <main class="content">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

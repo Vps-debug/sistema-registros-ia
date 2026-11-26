@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block title %}Histórico | AuditReg{% endblock %}
+{% block breadcrumb %}Histórico{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Histórico de auditorias</h1>
+    <p>
+        Consulte os resultados das conferências
+        realizadas anteriormente.
+    </p>
+</div>
+<!-- Indicadores -->
+<div class="stats-grid history-stats">
+    <div class="stat-card">
+        <span>
+            <i class="bi bi-clock-history"></i>
+            Total de conferências
+        </span>
+        <h2 class="text-primary">
+            {{ indicadores.total }}
+        </h2>
+    </div>
+    <div class="stat-card">
+        <span>
+            <i class="bi bi-exclamation-triangle"></i>
+            Com inconsistências
+        </span>
+        <h2 class="text-warning">
+            {{ indicadores.inconsistentes }}
+        </h2>
+    </div>
+    <div class="stat-card">
+        <span>
+            <i class="bi bi-check-circle"></i>
+            Sem inconsistências
+        </span>
+        <h2 class="text-success">
+            {{ indicadores.correspondentes }}
+        </h2>
+    </div>
+</div>
+<!-- Pesquisa e filtros -->
+<section class="card">
+    <h2>Pesquisar conferências</h2>
+    <form method="GET"
+          action="{{ url_for('historico') }}"
+          class="filter-form">
+        <input
+            type="text"
+            name="busca"
+            placeholder="Pesquisar por código..."
+            aria-label="Código do registro"
+            value="{{ busca }}"
+        >
+        <select name="situacao" aria-label="Resultado">
+            <option value="">Todos os resultados</option>
+            <option value="correspondente"
+                {{ 'selected' if situacao == 'correspondente' else '' }}>
+                Correspondentes
+            </option>
+            <option value="divergente"
+                {{ 'selected' if situacao == 'divergente' else '' }}>
+                Divergentes
+            </option>
+            <option value="ausente"
+                {{ 'selected' if situacao == 'ausente' else '' }}>
+                Fonte ausente
+            </option>
+        </select>
+        <input
+            type="date"
+            name="data"
+            aria-label="Data da conferência em UTC"
+            value="{{ data }}"
+        >
+        <button type="submit">
+            <i class="bi bi-search"></i>
+            Filtrar
+        </button>
+        {% if busca or situacao or data %}
+            <a href="{{ url_for('historico') }}"
+               class="btn-secondary">
+                Limpar
+            </a>
+        {% endif %}
+    </form>
+</section>
+<!-- Histórico -->
+<section class="card">
+    <div class="section-header">
+        <h2>Conferências realizadas</h2>
+        <span class="result-count">
+            {{ auditorias | length }} conferência(s)
+        </span>
+    </div>
+    {% for auditoria in auditorias %}
+        <details class="pending-item">
+            <summary class="pending-summary">
+                <div class="pending-info">
+                    <span class="record-code">
+                        {{ auditoria.codigo_registro }}
+                    </span>
+                    <span class="history-date">
+                        <i class="bi bi-calendar3"></i>
+                        {{ auditoria.data_conferencia }}
+                        UTC
+                    </span>
+                </div>
+                {% if auditoria.fonte_ausente %}
+                    <span class="badge badge-danger">
+                        Fonte ausente
+                    </span>
+                {% elif auditoria.divergencias %}
+                    <span class="badge badge-warning">
+                        Divergente
+                    </span>
+                {% else %}
+                    <span class="badge badge-success">
+                        Correspondente
+                    </span>
+                {% endif %}
+                <span class="manage-link">
+                    Ver detalhes
+                    <i class="bi bi-chevron-down"></i>
+                </span>
+            </summary>
+            <div class="pending-content">
+                <div class="history-detail-header">
+                    <div>
+                        <span class="history-label">
+                            Identificador da auditoria
+                        </span>
+                        <strong>
+                            #{{ auditoria.id }}
+                        </strong>
+                    </div>
+                    <div>
+                        <span class="history-label">
+                            Resultado original
+                        </span>
+                        <strong>
+                            {{ auditoria.situacao }}
+                        </strong>
+                    </div>
+                </div>
+                <!-- Divergências armazenadas -->
+                {% if auditoria.fonte_ausente %}
+                    <div class="result-banner result-danger">
+                        <i class="bi bi-x-circle"></i>
+                        <div>
+                            <strong>Fonte ausente</strong>
+                            <p>{{ auditoria.fonte_ausente }}</p>
+                        </div>
+                    </div>
+                {% elif auditoria.divergencias %}
+                    <h3 class="history-subtitle">
+                        Divergências identificadas
+                    </h3>
+                    <div class="table-container history-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Campo</th>
+                                    <th>Cadastro principal</th>
+                                    <th>Sistema secundário</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for campo, valores in auditoria.divergencias.items() %}
+                                    <tr>
+                                        <td>
+                                            {{ campo | replace('_', ' ') | capitalize }}
+                                        </td>
+                                        <td>
+                                            {{ valores.principal }}
+                                        </td>
+                                        <td>
+                                            {{ valores.secundario }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="result-banner result-success">
+                        <i class="bi bi-check-circle"></i>
+                        <div>
+                            <strong>Registros correspondentes</strong>
+                            <p>
+                                Nenhuma divergência foi identificada
+                                nesta conferência.
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+                <!-- Análise armazenada -->
+                {% if auditoria.analise_ia %}
+                    <section class="history-analysis">
+                        <h3>
+                            <i class="bi bi-stars"></i>
+                            Análise registrada
+                        </h3>
+                        <p>{{ auditoria.analise_ia }}</p>
+                    </section>
+                {% endif %}
+                <div class="history-notice">
+                    <i class="bi bi-info-circle"></i>
+                    Estas informações representam o resultado
+                    armazenado na data da conferência e podem
+                    não corresponder à situação atual do registro.
+                </div>
+                <!-- Ações da auditoria -->
+                <div class="pending-actions">
+                    <!-- Emissão de relatório -->
+                    <a class="btn-secondary"
+                       href="{{ url_for(
+                           'relatorio',
+                           id_auditoria=auditoria.id
+                       ) }}"
+                       target="_blank"
+                       rel="noopener">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                        Emitir relatório
+                    </a>
+                    <!-- Nova conferência -->
+                    <a class="btn-secondary"
+                       href="{{ url_for(
+                           'conferencia',
+                           codigo=auditoria.codigo_registro
+                       ) }}">
+                        <i class="bi bi-arrow-repeat"></i>
+                        Realizar nova conferência
+                    </a>
+                </div>
+            </div>
+        </details>
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-clock-history"></i>
+            <h3>Nenhuma conferência encontrada</h3>
+            <p>
+                As conferências realizadas serão
+                armazenadas automaticamente nesta página.
+            </p>
+        </div>
+    {% endfor %}
+</section>
+{% include "historico_retificacoes.html" %}
+{% endblock %}
